@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  password      String
+  phoneNumber   String?
+  birthDate     DateTime?
+  birthTime     String?
+  birthPlace    String?
+  gender        String?
+  avatarUrl     String?
+  language      String    @default("zh-CN")
+  timezone      String    @default("Asia/Shanghai")
+  notifications Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  fortunes              Fortune[]
+  marriageCompatibilities MarriageCompatibility[] @relation("User1")
+  marriageCompatibilities2 MarriageCompatibility[] @relation("User2")
+  nameAnalyses          NameAnalysis[]
+  refreshTokens         RefreshToken[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Fortune {
+  id          String   @id @default(uuid())
+  userId      String
+  category    String
+  date        DateTime @default(now())
+  title       String
+  description String   @db.Text
+  prediction  String   @db.Text
+  luckyNumber Int?
+  luckyColor  String?
+  luckyDirection String?
+  advice      String?  @db.Text
+  score       Int?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+  @@index([date])
+}
+
+model MarriageCompatibility {
+  id              String   @id @default(uuid())
+  user1Id         String
+  user2Id         String
+  score           Int
+  overall         String   @db.Text
+  strengths       String[]
+  challenges      String[]
+  advice          String   @db.Text
+  user1Element    String
+  user2Element    String
+  elementCompat   String
+  elementDesc     String   @db.Text
+  user1Zodiac     String
+  user2Zodiac     String
+  zodiacCompat    String
+  zodiacDesc      String   @db.Text
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  user1 User @relation("User1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("User2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model NameAnalysis {
+  id                String   @id @default(uuid())
+  userId            String?
+  surname           String
+  givenName         String
+  fullName          String
+  overall           String   @db.Text
+  totalStrokes      Int
+  surnameStrokes    Int
+  givenNameStrokes  Int
+  tianGe            Int
+  renGe             Int
+  diGe              Int
+  waiGe             Int
+  zongGe            Int
+  strokeInterpret   String   @db.Text
+  elementBalance    Json
+  numerology        Json
+  pronunciation     Json
+  recommendations   String[]
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([fullName])
+}
